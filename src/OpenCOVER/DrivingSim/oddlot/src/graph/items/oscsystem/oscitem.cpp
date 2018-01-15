@@ -256,7 +256,7 @@ OSCItem::updateColor(const std::string &type)
 /*
 * Update position
 */
-void
+void 
 OSCItem::updatePosition()
 {
 	QTransform *transform = new QTransform;
