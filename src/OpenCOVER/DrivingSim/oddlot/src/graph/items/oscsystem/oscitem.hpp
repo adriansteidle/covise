@@ -129,6 +129,7 @@ private:
     void init();
 	void updateIcon(OpenScenario::oscObjectBase *catalogObject, std::string catalogName, std::string categoryName, std::string entryName);
     QString updateName();
+
 	OpenScenario::oscCatalog *catalog_;
 	RSystemElementRoad *road_;
 	RSystemElementRoad *closestRoad_;
@@ -138,11 +139,13 @@ private:
 	double angle_;
 	double iconScaleX_;
 	double iconScaleY_;
+	QPointF svgCenter_;
     QPointF pos_;
+	QPointF lastPos_;
 	QPainterPath path_;
 
-    QPointF pressPos_;
-	QPointF lastPos_;
+    QPointF mousePressPos_;
+	QPointF mouseLastPos_;
 	bool doPan_;
 	bool copyPan_;
 

@@ -309,6 +309,15 @@ OSCObjectItem::updatePosition()
     createPath();
 }
 
+/*
+** Get clone **
+
+OSCObjectItem *
+OSCObjectItem::getClone() {
+	OSCObjectItem *Clone = new OSCObjectItem(roadSystemItem_, object_, pos_);
+}
+*/
+
 //*************//
 // Delete Item
 //*************//

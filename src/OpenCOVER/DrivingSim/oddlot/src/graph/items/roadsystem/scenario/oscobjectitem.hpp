@@ -52,6 +52,7 @@ public:
     void updateColor();
     virtual void createPath();
     void updatePosition();
+//	OSCObjectItem *getClone();
 
     // Text //
     //
