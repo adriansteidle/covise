@@ -66,6 +66,7 @@
 #include <QString>
 #include <QKeyEvent>
 #include <QTransform>
+#include <QFile>
 
 
 OSCItem::OSCItem(OSCElement *element, OSCBaseItem *oscBaseItem, OpenScenario::oscObject *oscObject, OpenScenario::oscCatalog *catalog, OpenScenario::oscRoad *oscRoad)
@@ -86,48 +87,141 @@ OSCItem::~OSCItem()
 	delete svgItem_;
 }
 
-void OSCItem::updateIcon()
+void OSCItem::updateIcon(OpenScenario::oscObjectBase *catalogObject, std::string catalogName, std::string categoryName, std::string entryName)
 {
-	OpenScenario::oscVehicle *vehicle = dynamic_cast<OpenScenario::oscVehicle *>(oscObject_);
-	double widthBoundBox = vehicle->BoundingBox->Dimension->width;
-	double lengthBoundBox = vehicle->BoundingBox->Dimension->length;
-	double heightBoundBox = vehicle->BoundingBox->Dimension->height;
-	if (widthBoundBox < 1.0)
-		widthBoundBox = 1.8;
-	if (lengthBoundBox < 1.0)
-		lengthBoundBox = 3;
-	if (heightBoundBox < 1.0)
-		heightBoundBox = 1.5;
-	if (vehicle)
+	QFile file;
+	QString dir = ":/svgIcons/";
+	std::string fn;
+
+	QString qCatalogName = QString::fromStdString(catalogName);
+	QString qCategoryName = QString::fromStdString(categoryName);
+	QString qEntryName = QString::fromStdString(entryName);
+
+	OpenScenario::oscVehicle *vehicle = dynamic_cast<OpenScenario::oscVehicle *>(catalogObject);
+
+
+	OpenScenario::oscMember *boundingBoxMember = catalogObject->getMember("BoundingBox");
+	if (boundingBoxMember)
+		{
+		oscBoundingBox *BoundingBox = dynamic_cast<OpenScenario::oscBoundingBox*>(boundingBoxMember->getObjectBase());
+		
+
+		if (BoundingBox) {
+
+
+			double widthBoundBox = BoundingBox->Dimension->width;
+			double lengthBoundBox = BoundingBox->Dimension->length;
+			double heightBoundBox = BoundingBox->Dimension->height;
+			if (widthBoundBox < 1.0)
+				widthBoundBox = 1.8;
+			if (lengthBoundBox < 1.0)
+				lengthBoundBox = 3;
+			if (heightBoundBox < 1.0)
+				heightBoundBox = 1.5;
+
+
+			if (file.exists(dir + qCatalogName + "_" + qCategoryName + "_" + qEntryName + ".svg"))
+			{
+				fn = ":/svgIcons/" + catalogName + "_" + categoryName + "_" + entryName + ".svg";
+			}
+			else if (file.exists(dir + qCatalogName + "_" + qCategoryName + ".svg"))
+			{
+				fn = ":/svgIcons/" + catalogName + "_" + categoryName + ".svg";
+			}
+			else
+			{
+				fn = ":/svgIcons/" + catalogName + ".svg";
+			}
+			svgItem_ = new SVGItem(this, fn);
+
+			QRectF rect = svgItem_->boundingRect();
+			iconScaleX_ = (1 / rect.width()) * lengthBoundBox;
+			iconScaleY_ = (1 / rect.height()) * heightBoundBox;
+
+		}
+	}
+/*	OpenScenario::oscPedestrian *pedestrian = dynamic_cast<OpenScenario::oscPedestrian *>(catalogObject);
+	if(pedestrian){}
+	OpenScenario::oscMiscObject *miscObject = dynamic_cast<OpenScenario::oscMiscObject *>(catalogObject);
+	if(miscObject){}
+*/
+
+
+/*
+ if (vehicle)
 	{
+		std::string iconPath = "";
+
 		//svgItem->setElementId((int)vehicle->category.getValue())
 		switch (vehicle->category.getValue())
 		{
 		case oscVehicle::car:
 		{
+			std::string fn = ":/vehicleIcons/car.svg";
+			svgItem_ = new SVGItem(this, fn);
 			break;
 		}
 		case oscVehicle::truck:
 		{
+			std::string fn = ":/vehicleIcons/truck.svg";
+			svgItem_ = new SVGItem(this, fn);
 			break;
 		}
 		case oscVehicle::bus:
 		{
+			std::string fn = ":/vehicleIcons/bus.svg";
+			svgItem_ = new SVGItem(this, fn);
+			break;
+		}
+		case oscVehicle::tram:
+		{
+			std::string fn = ":/vehicleIcons/tram.svg";
+			svgItem_ = new SVGItem(this, fn);
+			break;
+		}
+		case oscVehicle::bicycle:
+		{
+			std::string fn = ":/vehicleIcons/bicycle.svg";
+			svgItem_ = new SVGItem(this, fn);
+			break;
+		}
+		case oscVehicle::train:
+		{
+			std::string fn = ":/vehicleIcons/train.svg";
+			svgItem_ = new SVGItem(this, fn);
+			break;
+		}
+		case oscVehicle::motorbike:
+		{
+			std::string fn = ":/vehicleIcons/motorbike.svg";
+			svgItem_ = new SVGItem(this, fn);
+			break;
+		}
+		case oscVehicle::trailer:
+		{
+			std::string fn = ":/vehicleIcons/trailer.svg";
+			svgItem_ = new SVGItem(this, fn);
 			break;
 		}
 		default:
 		{
 			//path.addRect(0, 0, lengthBoundBox, heightBoundBox);
-		}
+	}
+	
+}
+
+*/
+
+
 
 		//	trailer,
 		//	motorbike,
 		//	bicycle,
 		//		train,
 		//	tram,
-		}
 	}
-}
+	
+
 /*!
 * Initializes the path 
 
@@ -256,9 +350,14 @@ OSCItem::init()
 
 	// TODO: get type and object from catalog reference //
 	//
-
+	std::string categoryName;
 	OpenScenario::oscObjectBase *catalogObject = catalog_->getCatalogObject(catalogName,entryName);
-
+	OpenScenario::oscMember *categoryMember = catalogObject->getMember("category");
+	if (categoryMember) {
+		OpenScenario::oscEnum *categoryEnums = dynamic_cast<OpenScenario::oscEnum*>(categoryMember);
+		OpenScenario::oscIntValue *categoryValue = dynamic_cast<OpenScenario::oscIntValue*>(categoryMember->getValue());
+		categoryName = categoryEnums->getValueAsStr(categoryValue->getValue());
+	}
 
 #ifdef WIN32
 	char *pValue;
@@ -274,15 +373,14 @@ OSCItem::init()
 	if (covisedir_ == "")
 		covisedir_ = getenv("COVISEDIR");
 #endif
-	std::string fn = covisedir_+"/share/covise/icons/svg/car.svg";
-	svgItem_ = new SVGItem(this, fn);
-
+	
+	updateIcon(catalogObject, catalogName, categoryName, entryName);
 
 	if (catalogObject)
 	{
 
-		if (catalog_->getCatalogName() == "Vehicle")
-		{
+		//if (catalog_->getCatalogName() == "Vehicle")
+		//{
 			createPath = NULL;
 			updateColor(catalog_->getCatalogName());
 			//path_ = createPath(catalogObject, road_);
@@ -290,7 +388,7 @@ OSCItem::init()
 			lastPos_ = pos_;
 			doPan_ = false;
 			updatePosition();
-		}
+		//}
 
 	}
 }
@@ -332,20 +430,25 @@ void
 OSCItem::updatePosition()
 {
 	QTransform transform;
-//	double s = road_->getSFromGlobalPoint(pos_);
+	double s = road_->getSFromGlobalPoint(pos_);
+	double t = road_->getTFromGlobalPoint(pos_, s);
 	double heading = road_->getGlobalHeading(s_);
+	if (t > 0)
+	{
+		heading += 180;
+	}
 	transform.rotate(road_->getGlobalHeading(s_));
+	transform.scale(iconScaleX_, iconScaleY_);
 	transform.translate(pos_.x(),pos_.y());
-	QRectF rect = svgItem_->boundingRect();
+
 //	qDebug() << rect.width() << " " << rect.height();
-	transform.scale(0.1, 0.1);
 	svgItem_->setTransform(transform);
 
 /*	path_ = transform.map(path_);
 	setPath(path_); */
 
 	angle_ = heading;
-
+	svgItem_->setPos(pos_);
 	oscTextItem_->setPos(pos_);
 }
 
@@ -470,13 +573,15 @@ OSCItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
     else 
     {
-
+	
 		doPan_ = true;
 		if (copyPan_)
 		{
-	/*		Signal * newSignal = signal_->getClone();
-			AddSignalCommand *command = new AddSignalCommand(newSignal, signal_->getParentRoad(), NULL);
-			getProjectGraph()->executeCommand(command); */
+		//SVGItem *svgItemClone = svgItem_;
+
+		/*Signal *newSignal = signal_->getClone();
+		AddSignalCommand *command = new AddSignalCommand(newSignal, signal_->getParentRoad(), NULL);
+		getProjectGraph()->executeCommand(command); */
 		}
 
         GraphElement::mousePressEvent(event); // pass to baseclass
@@ -617,7 +722,9 @@ OSCItem::updateObserver()
 		path_.translate(-pos_);
 		s_ = oscRoad_->s.getValue();
 		t_ = oscRoad_->t.getValue();
+	//	updateIcon(*catalogObject, catalogName, categoryName, entryName);
 		updatePosition();
+
 	}
 
     // Signal //
