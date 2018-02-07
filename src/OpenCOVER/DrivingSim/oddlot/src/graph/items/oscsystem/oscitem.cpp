@@ -280,9 +280,6 @@ void OSCItem::updateIcon(OpenScenario::oscObjectBase *catalogObject, std::string
 void
 OSCItem::updatePosition()
 {
-	/*QTransform tR;
-	QTransform tS;
-	QTransform tT;*/
 	tR_.reset();
 	tS_.reset();
 	tT_.reset();
@@ -301,7 +298,7 @@ OSCItem::updatePosition()
 		t = -t;
 	}
 
-	if (t < 0)
+	if (t + svgCenter_.y() > 0)
 	{
 		heading += 180;
 	}
@@ -442,7 +439,6 @@ OSCItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 		doPan_ = true;
 		if (copyPan_)
 		{
-			//cloneElement_ = oscEditor_->cloneEntity(element_, oscObject_);
 			cloneSvgItem_ = new SVGItem(this, fn_);
 			cloneSvgItem_->setPos(QPointF(0, 0));
 			cloneSvgItem_->setTransform(tS_*tR_*tT_);
