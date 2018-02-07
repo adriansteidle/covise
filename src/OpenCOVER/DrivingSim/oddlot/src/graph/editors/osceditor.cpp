@@ -356,9 +356,8 @@ OpenScenarioEditor::move(QPointF &diff)
 }
 
 void 
-OpenScenarioEditor::translateObject(OSCItem *oscItem, QPointF &diff)
+OpenScenarioEditor::translateObject(OpenScenario::oscObject *oscObject, QPointF &diff)
 {
-	OpenScenario::oscObject *oscObject = oscItem->getObject();
 	OpenScenario::oscPrivateAction *oscPrivateAction = getOrCreatePrivateAction(oscObject->name.getValue());
 
 	OpenScenario::oscPosition *oscPosition = oscPrivateAction->Position.getOrCreateObject();
@@ -405,7 +404,7 @@ OpenScenarioEditor::translate(QPointF &diff)
 		OSCItem *oscItem = dynamic_cast<OSCItem *>(item);
 		if (oscItem)
 		{
-			translateObject(oscItem, diff);
+			translateObject(oscItem->getObject(), diff);
 		}
 	}
 
@@ -662,7 +661,7 @@ OpenScenarioEditor::getName(OpenScenario::oscArrayMember *arrayMember, const std
 	return newname;
 }
 
-void 
+OSCElement* 
 OpenScenarioEditor::cloneEntity(OSCElement *element, OpenScenario::oscObject *oscObject)
 {
 	getProjectData()->getUndoStack()->beginMacro("Clone Entity");
@@ -690,8 +689,9 @@ OpenScenarioEditor::cloneEntity(OSCElement *element, OpenScenario::oscObject *os
 		OpenScenario::oscPrivateAction *privateAction = getOrCreatePrivateAction(clone->name.getValue());
 		privateAction->cloneMembers(getOrCreatePrivateAction(oscObject->name.getValue()));
 	}
-
+	
 	getProjectData()->getUndoStack()->endMacro();
+	return oscElement;
 }
 
 

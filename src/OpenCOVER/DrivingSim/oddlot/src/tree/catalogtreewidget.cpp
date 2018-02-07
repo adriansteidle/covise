@@ -13,6 +13,9 @@
 **
 **************************************************************************/
 
+//hier dragevent reinmachen in mousepress (auf der rechten Seite das Auto ziehen)
+// dropaction in osceditor
+
 #include "catalogtreewidget.hpp"
 
 // Data //
