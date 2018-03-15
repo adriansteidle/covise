@@ -63,6 +63,9 @@
 
 #include <QWidget>
 #include <QDockWidget>
+#include <QMouseEvent>
+#include <QDrag>
+#include <QMimeData>
 
 using namespace OpenScenario;
 
@@ -138,7 +141,6 @@ CatalogTreeWidget::init()
 
 	catalogName_ = catalog_->getCatalogName();
 	catalogType_ = "osc" + catalogName_;
-
 
 	//parse all files only if it has not already been parsed
 	//store object name and filename in map
@@ -403,6 +405,42 @@ CatalogTreeWidget::onItemClicked(QTreeWidgetItem *item, int column)
 
 }
 
+void 
+CatalogTreeWidget::mousePressEvent(QMouseEvent *event) 
+{
+	if (event->button() == Qt::LeftButton)
+		dragStartPosition_ = event->pos();
+
+	QTreeWidget::mousePressEvent(event);
+
+	onItemClicked(itemAt(event->pos()),0);
+}
+
+void
+CatalogTreeWidget::mouseMoveEvent(QMouseEvent *event)
+{
+	QTreeWidget::mouseMoveEvent(event);
+
+	if (!(event->buttons() & Qt::LeftButton))
+		return;
+	if ((event->pos() - dragStartPosition_).manhattanLength() < QApplication::startDragDistance())
+		return;
+
+
+	QDrag *drag = new QDrag(this);
+	QMimeData *mimeData = new QMimeData;
+
+	OpenScenario::oscMember *nameMember = oscElement_->getObject()->getMember("name");
+	OpenScenario::oscStringValue *memberValue = dynamic_cast<oscStringValue*>(nameMember->getValue());
+	std::string entryName = memberValue->getValue();
+
+	mimeData->setData("text/plain", QByteArray::fromStdString(entryName));
+	drag->setMimeData(mimeData);
+
+	Qt::DropAction dropAction = drag->exec(Qt::CopyAction | Qt::MoveAction);
+
+
+}
 
 //################//
 // SLOTS          //
